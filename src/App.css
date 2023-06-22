@@ -39,44 +39,9 @@ button,
   border-width: 2px;
 }
 
-.form-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  border-radius: 15px;
-  background: white;
-  padding: 1rem;
-}
-
-.form-container button {
-  align-self: flex-start;
-  cursor: pointer;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-/* Styles form form element to display in a 2 column layout */
-.form-2-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  max-width: 512px;
-}
-
-.form-2-col label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
 /* Wrap each page in this class to setup padding and max width */
 .container {
   max-width: 1024px;
   margin: 0 auto;
   padding: 1rem;
-}
-
-.container > h1 {
-  color: white;
 }

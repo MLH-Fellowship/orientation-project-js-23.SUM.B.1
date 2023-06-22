@@ -1,12 +1,13 @@
 import { Form as ReactRouterForm, useNavigation } from "react-router-dom";
+import s from "./education.module.css";
 import { Loader } from "../shared/loader/Loader";
 
 export function Form() {
   const { state } = useNavigation();
   const showLoader = state === "submitting" || state === "loading";
   return (
-    <ReactRouterForm className="form-container" method="post">
-      <div className="form-2-col">
+    <ReactRouterForm className={s.formContainer} method="post">
+      <div className={s.form2Col}>
         <label>
           Course:
           <input type="text" name="course" required />
