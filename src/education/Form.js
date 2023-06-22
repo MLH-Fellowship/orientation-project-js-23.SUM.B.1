@@ -1,6 +1,9 @@
-import { Form as ReactRouterForm } from "react-router-dom";
+import { Form as ReactRouterForm, useNavigation } from "react-router-dom";
+import { Loader } from "../shared/loader/Loader";
 
 export function Form() {
+  const { state } = useNavigation();
+  const showLoader = state === "submitting" || state === "loading";
   return (
     <ReactRouterForm className="form-container" method="post">
       <div className="form-2-col">
@@ -33,12 +36,12 @@ export function Form() {
           <input
             type="text"
             name="logo"
-            pattern="^(http|https):\/\/[^\s/$.?#].[^\s]*$"
+            pattern="^(http|https):\/\/[^\s\/$.?#]+\.[^\s]*$"
             required
           />
         </label>
       </div>
-      <button>Create</button>
+      <button disabled={showLoader}>Create {showLoader && <Loader />}</button>
     </ReactRouterForm>
   );
 }

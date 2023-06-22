@@ -50,6 +50,10 @@ button,
 
 .form-container button {
   align-self: flex-start;
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 /* Styles form form element to display in a 2 column layout */
