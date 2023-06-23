@@ -2,6 +2,18 @@
 
 Refer to the Fellowship LMS for information!
 
+## Install instructions
+
+Created a .env file in the root directory with the following contents:
+
+```.env
+REACT_APP_BACKEND_URL=<url of backend>
+```
+
+For example, the flask server is running on http://localhost:5000 then <url of backend> should be ```http://localhost:5000```
+
+Run ```yarn start``` to run the server
+
 ## Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
