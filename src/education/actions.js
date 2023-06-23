@@ -1,5 +1,7 @@
 import { redirect } from "react-router-dom";
 
+const originUrl = process.env.REACT_APP_BACKEND_URL;
+
 export async function postAction({ request }) {
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
@@ -11,7 +13,7 @@ export async function postAction({ request }) {
   const endMonth = endDate.toLocaleString("default", { month: "long" });
   const endYear = endDate.getFullYear();
 
-  await fetch("/resume/education", {
+  await fetch(`${originUrl}/resume/education`, {
     body: JSON.stringify({
       ...data,
       start_date: `${startMonth} ${startYear}`,
