@@ -42,7 +42,9 @@ export function Form() {
           />
         </label>
       </div>
-      <button disabled={showLoader}>Create {showLoader && <Loader />}</button>
+      <button type="submit" disabled={showLoader}>
+        Create {showLoader && <Loader />}
+      </button>
     </ReactRouterForm>
   );
 }

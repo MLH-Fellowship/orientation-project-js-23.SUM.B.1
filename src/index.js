@@ -5,7 +5,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { CreatePage as CreateEducationPage } from "./education/CreatePage";
-import { action as createEducationAction } from "./education/createAction";
+import { postAction as createEducationAction } from "./education/actions";
 
 const router = createBrowserRouter([
   { path: "/", element: <App /> },
