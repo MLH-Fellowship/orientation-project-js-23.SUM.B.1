@@ -4,12 +4,20 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { CreatePage as CreateEducationPage } from "./education/CreatePage";
+import { postAction as createEducationAction } from "./education/actions";
 
 const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/experiences/create", element: <div>Create experience</div> },
   { path: "/experiences/:id", element: <div>View Specific experience</div> },
   { path: "/experiences/:id/edit", element: <div>Edit experience</div> },
+  {
+    path: "/education/create",
+    element: <CreateEducationPage />,
+    action: createEducationAction,
+  },
+  { path: "/education/:id/edit", element: <div>Edit education</div> },
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

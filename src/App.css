@@ -22,8 +22,26 @@ body {
   font-style: italic;
 }
 
-button {
+button,
+.btn {
+  font-size: 1rem;
   padding: 10px;
   border-radius: 4px;
   background-color: rgb(248 185 42);
+  border-color: black;
+}
+
+.btn {
+  display: inline-block;
+  color: black;
+  text-decoration: none;
+  border-style: outset;
+  border-width: 2px;
+}
+
+/* Wrap each page in this class to setup padding and max width */
+.container {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 1rem;
 }
