@@ -4,7 +4,7 @@ Refer to the Fellowship LMS for information!
 
 ## Install instructions
 
-Created a .env file in the root directory with the following contents:
+Create an .env file in the root directory with the following contents:
 
 ```.env
 REACT_APP_BACKEND_URL=<url of backend>
