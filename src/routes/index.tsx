@@ -23,9 +23,7 @@ export function Index() {
       <div className="flex flex-col gap-4 rounded bg-slate-800 p-4">
         <h2 className="text-2xl">Skills</h2>
         <p>Skill Placeholder</p>
-        <Link
-          to="/education/create"
-          className="rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90">
+        <Link className="rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90">
           Add Skill
         </Link>
       </div>
