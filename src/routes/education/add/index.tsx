@@ -10,6 +10,7 @@ import z from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
+import { useMutation } from '@tanstack/react-query'
 
 const formSchema = z.object({
   course: z.string().min(1),
@@ -29,18 +30,36 @@ export function AddEducation() {
     defaultValues: {
       course: '',
       school: '',
-      grade: ''
+      grade: '',
+      logo: ''
+    }
+  })
+  const addEducation = useMutation({
+    mutationFn: (data: Required<Form>) => {
+      const startDate = new Date(data.start_date)
+      const startMonth = startDate.toLocaleString('default', { month: 'long' })
+      const startYear = startDate.getFullYear()
+      const endDate = new Date(data.end_date)
+      const endMonth = endDate.toLocaleString('default', { month: 'long' })
+      const endYear = endDate.getFullYear()
+      return fetch('/resume/education', {
+        body: JSON.stringify({
+          ...data,
+          start_date: `${startMonth} ${startYear}`,
+          end_date: `${endMonth} ${endYear}`
+        }),
+        method: 'POST'
+      })
+    },
+    onSuccess() {
+      void navigate({ to: '/' })
     }
   })
 
   function onSubmit(data: Form) {
-    if (!data.start_date || !data.end_date) return
-    const startDate = new Date(data.start_date)
-    const startMonth = startDate.toLocaleString('default', { month: 'long' })
-    const startYear = startDate.getFullYear()
-    const endDate = new Date(data.end_date)
-    const endMonth = endDate.toLocaleString('default', { month: 'long' })
-    const endYear = endDate.getFullYear()
+    if (data.start_date && data.end_date) {
+      addEducation.mutate(data as Required<Form>)
+    }
   }
 
   return (
@@ -139,7 +158,7 @@ export function AddEducation() {
               name="grade"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>School:</FormLabel>
+                  <FormLabel>Grade:</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -152,7 +171,7 @@ export function AddEducation() {
               name="logo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>School:</FormLabel>
+                  <FormLabel>Logo (URL):</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>

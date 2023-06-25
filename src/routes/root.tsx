@@ -1,5 +1,5 @@
-import { Outlet } from "@tanstack/router";
+import { Outlet } from '@tanstack/router'
 
 export function Root() {
-  return <Outlet />;
+  return <Outlet />
 }
