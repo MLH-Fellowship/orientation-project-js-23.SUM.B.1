@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { useMutation } from '@tanstack/react-query'
+import { useToast } from '@/components/ui/use-toast'
 
 const formSchema = z.object({
   course: z.string().min(1),
@@ -34,6 +35,7 @@ export function AddEducation() {
       logo: ''
     }
   })
+  const { toast } = useToast()
   const addEducation = useMutation({
     mutationFn: (data: Required<Form>) => {
       const startDate = new Date(data.start_date)
@@ -51,8 +53,14 @@ export function AddEducation() {
         method: 'POST'
       })
     },
-    onSuccess() {
-      void navigate({ to: '/' })
+    onSuccess(res) {
+      if (res.ok) {
+        void navigate({ to: '/' })
+        toast({ title: 'Successfully added education' })
+        return
+      }
+
+      toast({ title: 'Failed to add education' })
     }
   })
 
@@ -184,7 +192,9 @@ export function AddEducation() {
             <Button onClick={() => void navigate({ to: '/' })} className="w-fit" variant="destructive" type="button">
               Back
             </Button>
-            <Button type="submit">Create</Button>
+            <Button type="submit" disabled={addEducation.isLoading}>
+              Create
+            </Button>
           </div>
         </form>
       </FormProvider>
