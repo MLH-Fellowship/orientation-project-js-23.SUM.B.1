@@ -13,6 +13,8 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormP
 import { useMutation } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/use-toast'
 
+const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
+
 const formSchema = z.object({
   course: z.string().min(1),
   school: z.string().min(1),
@@ -44,7 +46,7 @@ export function AddEducation() {
       const endDate = new Date(data.end_date)
       const endMonth = endDate.toLocaleString('default', { month: 'long' })
       const endYear = endDate.getFullYear()
-      return fetch('/resume/education', {
+      return fetch(`${backendUrl}/resume/education`, {
         body: JSON.stringify({
           ...data,
           start_date: `${startMonth} ${startYear}`,
@@ -60,6 +62,9 @@ export function AddEducation() {
         return
       }
 
+      toast({ title: 'Failed to add education' })
+    },
+    onError() {
       toast({ title: 'Failed to add education' })
     }
   })
