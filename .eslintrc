@@ -1,0 +1,20 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react-refresh"],
+  "rules": {
+    "eqeqeq": "error",
+    "react-refresh/only-export-components": "warn",
+    "@typescript-eslint/non-nullable-type-assertion-style": "off"
+  },
+  "extends": [
+    "plugin:@typescript-eslint/strict",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:react-hooks/recommended",
+    "prettier"
+  ],
+  "parserOptions": {
+    "project": ["./tsconfig.json"]
+  }
+}

@@ -1,0 +1,19 @@
+# Resume Builder
+
+- Frontend for building a resume using react, tanstack router, tanstack query, tailwindcss, shadcn/ui, typescript
+
+## How to run
+
+Create a .env file with the backend url. Here's an example:
+
+```.env
+VITE_BACKEND_URL=http://localhost:5000
+```
+
+Replace the url with the url of the backend.
+
+Then run the following commands:
+
+```bash
+yarn && yarn dev
+```
