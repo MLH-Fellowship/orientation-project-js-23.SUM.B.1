@@ -109,6 +109,9 @@ function Form({
     resolver: zodResolver(formSchema),
     defaultValues: {
       ...data
+    },
+    values: {
+      ...data
     }
   })
   return (
