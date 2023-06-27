@@ -26,19 +26,15 @@ const formSchema = z.object({
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 type Form = PartialBy<z.infer<typeof formSchema>, 'start_date' | 'end_date'>
 
+type Response = Promise<z.infer<typeof formSchema> | { Error: string }>
+
 export function EditEducation() {
   const navigate = useNavigate()
   const educationId = useParams()
-  const {
-    data: education,
-    isLoading,
-    isError
-  } = useQuery({
+  const { data: education, isLoading } = useQuery({
     queryKey: ['education', educationId],
     queryFn: async () => {
-      return fetch(`${backendUrl}/resume/education/${educationId as string}`).then(
-        (res) => res.json() as Promise<z.infer<typeof formSchema>>
-      )
+      return fetch(`${backendUrl}/resume/education/${educationId as string}`).then((res) => res.json() as Response)
     },
     enabled: !!educationId
   })
@@ -85,11 +81,11 @@ export function EditEducation() {
   }
 
   if (!education) {
-    return <div>Education not found</div>
+    return <div>Failed to fetch education</div>
   }
 
-  if (isError) {
-    return <div>Failed to fetch education</div>
+  if ('Error' in education) {
+    return <div>{education.Error}</div>
   }
 
   return <Form onSubmit={onSubmit} isSubmitting={addEducation.isLoading} data={education} />
