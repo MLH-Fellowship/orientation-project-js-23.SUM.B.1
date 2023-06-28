@@ -1,19 +1,18 @@
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useToast } from '@/components/ui/use-toast'
+import { config } from '@/config'
+import { cn } from '@/lib/utils'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/router'
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useNavigate } from '@tanstack/router'
-import z from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
-import { useMutation } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/use-toast'
-
-const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
+import z from 'zod'
 
 const formSchema = z.object({
   course: z.string().min(1),
@@ -46,7 +45,7 @@ export function AddEducation() {
       const endDate = new Date(data.end_date)
       const endMonth = endDate.toLocaleString('default', { month: 'long' })
       const endYear = endDate.getFullYear()
-      return fetch(`${backendUrl}/resume/education`, {
+      return fetch(`${config.VITE_BACKEND_URL}/resume/education`, {
         body: JSON.stringify({
           ...data,
           start_date: `${startMonth} ${startYear}`,

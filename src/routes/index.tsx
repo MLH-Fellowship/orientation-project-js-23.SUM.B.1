@@ -1,3 +1,4 @@
+import { config } from '@/config'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/router'
 
@@ -10,8 +11,6 @@ interface Education {
   grade: string
   logo: string
 }
-
-const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
 
 export function Index() {
   return (
@@ -49,7 +48,7 @@ function EducationsList() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['educations'],
     queryFn: async () => {
-      return fetch(`${backendUrl}/resume/education`).then((res) => res.json() as Promise<Education[]>)
+      return fetch(`${config.VITE_BACKEND_URL}/resume/education`).then((res) => res.json() as Promise<Education[]>)
     }
   })
 
