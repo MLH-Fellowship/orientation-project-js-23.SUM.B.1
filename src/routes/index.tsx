@@ -82,7 +82,10 @@ function ExperiencesList() {
         <li
           key={index + 1}
           className="relative after:[&:not(:last-child)]:absolute after:[&:not(:last-child)]:-bottom-3 after:[&:not(:last-child)]:left-0 after:[&:not(:last-child)]:h-[2px] after:[&:not(:last-child)]:w-full after:[&:not(:last-child)]:translate-y-1/2 after:[&:not(:last-child)]:rounded-md after:[&:not(:last-child)]:bg-slate-500 after:[&:not(:last-child)]:content-['']">
-          <Link to="/experiences/edit/$id" params={{ id: (index + 1).toString() }}>
+          <Link
+            to="/experiences/edit/$id"
+            className="block rounded-md p-4 hover:bg-slate-700/20"
+            params={{ id: (index + 1).toString() }}>
             <div className="grid grid-cols-2 grid-rows-2 justify-between gap-2">
               <h3 className="truncate">{data.title}</h3>
               <span className="text-right">
@@ -124,7 +127,10 @@ function EducationsList() {
         <li
           key={index + 1}
           className="relative after:[&:not(:last-child)]:absolute after:[&:not(:last-child)]:-bottom-3 after:[&:not(:last-child)]:left-0 after:[&:not(:last-child)]:h-[2px] after:[&:not(:last-child)]:w-full after:[&:not(:last-child)]:translate-y-1/2 after:[&:not(:last-child)]:rounded-md after:[&:not(:last-child)]:bg-slate-500 after:[&:not(:last-child)]:content-['']">
-          <Link to="/educations/edit/$id" params={{ id: (index + 1).toString() }}>
+          <Link
+            className="block rounded-md p-4 hover:bg-slate-700/20"
+            to="/educations/edit/$id"
+            params={{ id: (index + 1).toString() }}>
             <div className="grid grid-cols-2 grid-rows-2 justify-between gap-2">
               <h3 className="truncate">{data.school}</h3>
               <span className="text-right">
