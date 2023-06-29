@@ -28,13 +28,13 @@ type Form = PartialBy<z.infer<typeof formSchema>, 'start_date' | 'end_date'>
 
 type Response =
   | {
-    title: string
-    company: string
-    start_date: string
-    end_date: string
-    description: string
-    logo: string
-  }
+      title: string
+      company: string
+      start_date: string
+      end_date: string
+      description: string
+      logo: string
+    }
   | { message: string }
 
 export function EditExperience() {
@@ -156,7 +156,7 @@ function Form({
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-8 rounded-md border-2 border-input p-8">
-          <h1 className="text-4xl">Edit Experiences</h1>
+          <h1 className="text-4xl">Edit Experience</h1>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
             <FormField
               control={form.control}
