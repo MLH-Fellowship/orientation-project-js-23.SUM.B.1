@@ -174,7 +174,7 @@ export function AddEducation() {
                             field.onChange('Present')
                             return
                           }
-                          field.onChange(undefined)
+                          field.onChange(new Date())
                         }}
                       />
                     </label>

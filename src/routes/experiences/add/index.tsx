@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
+import { Checkbox } from '@/components/ui/checkbox'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -18,7 +19,7 @@ const formSchema = z.object({
   title: z.string().nonempty({ message: 'Title is required' }),
   company: z.string().nonempty({ message: 'Company is required' }),
   start_date: z.date(),
-  end_date: z.date(),
+  end_date: z.date().or(z.string()),
   description: z.string().nonempty({ message: 'Description is required' }),
   logo: z.string().url()
 })
@@ -42,6 +43,19 @@ export function AddExperience() {
       const startDate = new Date(data.start_date)
       const startMonth = startDate.toLocaleString('default', { month: 'long' })
       const startYear = startDate.getFullYear()
+      if (data.end_date === 'Present') {
+        return fetch(`${config.VITE_BACKEND_URL}/resume/experience`, {
+          body: JSON.stringify({
+            ...data,
+            start_date: `${startMonth} ${startYear}`,
+            end_date: data.end_date
+          }),
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+      }
       const endDate = new Date(data.end_date)
       const endMonth = endDate.toLocaleString('default', { month: 'long' })
       const endYear = endDate.getFullYear()
@@ -145,7 +159,23 @@ export function AddExperience() {
               name="end_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>End Date:</FormLabel>
+                  <div className="flex justify-between">
+                    <FormLabel className="inline-block w-24">End Date:</FormLabel>
+                    <label htmlFor="end-date-checkbox" className="flex items-center gap-2">
+                      Present
+                      <Checkbox
+                        id="end-date-checkbox"
+                        checked={field.value === 'Present'}
+                        onCheckedChange={(e) => {
+                          if (e) {
+                            field.onChange('Present')
+                            return
+                          }
+                          field.onChange(new Date())
+                        }}
+                      />
+                    </label>
+                  </div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -156,12 +186,25 @@ export function AddExperience() {
                             !field.value && 'text-muted-foreground'
                           )}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                          {field.value ? (
+                            typeof field.value !== 'string' ? (
+                              format(field.value, 'PPP')
+                            ) : (
+                              <span>Present</span>
+                            )
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                      <Calendar
+                        mode="single"
+                        selected={typeof field.value === 'string' ? new Date() : field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
                     </PopoverContent>
                   </Popover>
                   <FormMessage />

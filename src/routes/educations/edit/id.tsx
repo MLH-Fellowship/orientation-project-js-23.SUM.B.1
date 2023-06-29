@@ -239,7 +239,11 @@ function Form({
                             return
                           }
                           // Can't pass undefined or else validation will be out of sync according to react hook form docs
-                          field.onChange(formState.defaultValues?.end_date ?? new Date())
+                          field.onChange(
+                            formState.defaultValues?.end_date === 'Present'
+                              ? new Date()
+                              : formState.defaultValues?.end_date ?? new Date()
+                          )
                         }}
                       />
                     </label>
