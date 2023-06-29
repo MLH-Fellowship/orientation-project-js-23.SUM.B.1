@@ -158,7 +158,7 @@ function SkillsList() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['skills'],
     queryFn: async () => {
-      return fetch(`${backendUrl}/resume/skill`).then((res) => res.json() as Promise<Skill[]>)
+      return fetch(`${config.VITE_BACKEND_URL}/resume/skill`).then((res) => res.json() as Promise<Skill[]>)
     }
   })
 
