@@ -56,13 +56,13 @@ export function EditExperience() {
       const startMonth = startDate.toLocaleString('default', { month: 'long' })
       const startYear = startDate.getFullYear()
       if (data.end_date === 'Present') {
-        return fetch(`${config.VITE_BACKEND_URL}/resume/experience`, {
+        return fetch(`${config.VITE_BACKEND_URL}/resume/experience${params.id as string}`, {
           body: JSON.stringify({
             ...data,
             start_date: `${startMonth} ${startYear}`,
             end_date: data.end_date
           }),
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           }
@@ -71,13 +71,13 @@ export function EditExperience() {
       const endDate = new Date(data.end_date)
       const endMonth = endDate.toLocaleString('default', { month: 'long' })
       const endYear = endDate.getFullYear()
-      return fetch(`${config.VITE_BACKEND_URL}/resume/experience`, {
+      return fetch(`${config.VITE_BACKEND_URL}/resume/experience/${params.id as string}`, {
         body: JSON.stringify({
           ...data,
           start_date: `${startMonth} ${startYear}`,
           end_date: `${endMonth} ${endYear}`
         }),
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         }
