@@ -4,13 +4,14 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
 import { config } from '@/config'
 import { cn } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/router'
+import { SelectValue } from '@radix-ui/react-select'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate, useParams } from '@tanstack/router'
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -18,25 +19,40 @@ import z from 'zod'
 
 const GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F'] as const
 const formSchema = z.object({
-  course: z.string().min(1),
-  school: z.string().min(1),
+  course: z.string().nonempty({ message: 'Course is required' }),
+  school: z.string().nonempty({ message: 'School is required' }),
   start_date: z.date(),
   end_date: z.date().or(z.string()),
   grade: z.string(),
   logo: z.string({ required_error: 'test' }).url({ message: 'Invalid URL' })
 })
+
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 type Form = PartialBy<z.infer<typeof formSchema>, 'start_date' | 'end_date'>
 
-export function AddEducation() {
-  const navigate = useNavigate()
-  const form = useForm<Form>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      course: '',
-      school: '',
-      logo: ''
+type Response =
+  | {
+      course: string
+      school: string
+      start_date: string
+      end_date: string
+      grade: string
+      logo: string
     }
+  | { message: string }
+
+export function EditEducation() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { id } = useParams()
+  const { data: education, isLoading } = useQuery({
+    queryKey: ['education', id],
+    queryFn: async () => {
+      return fetch(`${config.VITE_BACKEND_URL}/resume/education/${id as string}`, {
+        method: 'GET'
+      }).then((res) => res.json() as Promise<Response>)
+    },
+    enabled: !!id
   })
   const { toast } = useToast()
   const addEducation = useMutation({
@@ -45,13 +61,13 @@ export function AddEducation() {
       const startMonth = startDate.toLocaleString('default', { month: 'long' })
       const startYear = startDate.getFullYear()
       if (data.end_date === 'Present') {
-        return fetch(`${config.VITE_BACKEND_URL}/resume/education`, {
+        return fetch(`${config.VITE_BACKEND_URL}/resume/education/${id as string}`, {
           body: JSON.stringify({
             ...data,
             start_date: `${startMonth} ${startYear}`,
             end_date: data.end_date
           }),
-          method: 'POST',
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           }
@@ -60,23 +76,23 @@ export function AddEducation() {
       const endDate = new Date(data.end_date)
       const endMonth = endDate.toLocaleString('default', { month: 'long' })
       const endYear = endDate.getFullYear()
-      return fetch(`${config.VITE_BACKEND_URL}/resume/education`, {
+      return fetch(`${config.VITE_BACKEND_URL}/resume/education/${id as string}`, {
         body: JSON.stringify({
           ...data,
           start_date: `${startMonth} ${startYear}`,
           end_date: `${endMonth} ${endYear}`
         }),
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         }
       })
     },
-    onSuccess(res) {
+    async onSuccess(res) {
       if (res.ok) {
         void navigate({ to: '/' })
         toast({ title: 'Successfully added education' })
-        return
+        return queryClient.invalidateQueries({ queryKey: ['education', id] })
       }
 
       toast({ title: 'Failed to add education' })
@@ -92,6 +108,54 @@ export function AddEducation() {
     }
   }
 
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (!education) {
+    return <div>Failed to fetch education</div>
+  }
+
+  if ('message' in education) {
+    return <div>{education.message}</div>
+  }
+
+  const startMonth = education.start_date.split(' ')[0] as string
+  const startYear = education.start_date.split(' ')[1] as string
+
+  // Can be the value Present which would result in undefined
+  const endMonth = education.end_date.split(' ')[0]
+  const endYear = education.end_date.split(' ')[1]
+
+  return (
+    <Form
+      onSubmit={onSubmit}
+      isSubmitting={addEducation.isLoading}
+      data={{
+        ...education,
+        start_date: new Date(Date.parse(`${startMonth} 1, ${startYear}`)),
+        end_date: endMonth && endYear ? new Date(Date.parse(`${endMonth} 1, ${endYear}`)) : 'Present'
+      }}
+    />
+  )
+}
+
+function Form({
+  data,
+  onSubmit,
+  isSubmitting
+}: {
+  onSubmit: (data: Form) => void
+  isSubmitting: boolean
+  data: z.infer<typeof formSchema>
+}) {
+  const navigate = useNavigate()
+  const form = useForm<Form>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      ...data
+    }
+  })
   return (
     <div className="flex flex-col gap-4 sm:pt-9">
       <FormProvider {...form}>
@@ -99,7 +163,7 @@ export function AddEducation() {
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-8 rounded-md border-2 border-input p-8">
-          <h1 className="text-4xl">Add Education</h1>
+          <h1 className="text-4xl">Edit Education</h1>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
             <FormField
               control={form.control}
@@ -160,7 +224,7 @@ export function AddEducation() {
             <FormField
               control={form.control}
               name="end_date"
-              render={({ field }) => (
+              render={({ field, formState }) => (
                 <FormItem>
                   <div className="flex justify-between">
                     <FormLabel className="inline-block w-24">End Date:</FormLabel>
@@ -174,7 +238,12 @@ export function AddEducation() {
                             field.onChange('Present')
                             return
                           }
-                          field.onChange(new Date())
+                          // Can't pass undefined or else validation will be out of sync according to react hook form docs
+                          field.onChange(
+                            formState.defaultValues?.end_date === 'Present'
+                              ? new Date()
+                              : formState.defaultValues?.end_date ?? new Date()
+                          )
                         }}
                       />
                     </label>
@@ -204,7 +273,7 @@ export function AddEducation() {
                     <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
-                        selected={typeof field.value === 'string' ? new Date() : field.value}
+                        selected={typeof field.value === 'string' ? undefined : field.value}
                         onSelect={field.onChange}
                         initialFocus
                       />
@@ -256,7 +325,7 @@ export function AddEducation() {
             <Button onClick={() => void navigate({ to: '/' })} className="w-fit" variant="destructive" type="button">
               Back
             </Button>
-            <Button type="submit" disabled={addEducation.isLoading}>
+            <Button type="submit" disabled={isSubmitting}>
               Create
             </Button>
           </div>

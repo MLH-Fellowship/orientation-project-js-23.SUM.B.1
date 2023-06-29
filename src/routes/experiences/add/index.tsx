@@ -1,115 +1,96 @@
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Checkbox } from '@/components/ui/checkbox'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useToast } from '@/components/ui/use-toast'
+import { config } from '@/config'
+import { cn } from '@/lib/utils'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/router'
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useNavigate, useParams } from '@tanstack/router'
-import z from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/use-toast'
-
-const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
+import z from 'zod'
 
 const formSchema = z.object({
-  course: z.string().min(1),
-  school: z.string().min(1),
+  title: z.string().nonempty({ message: 'Title is required' }),
+  company: z.string().nonempty({ message: 'Company is required' }),
   start_date: z.date(),
-  end_date: z.date(),
-  grade: z.string().regex(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)%$/, { message: 'Invalid grade' }),
-  logo: z.string({ required_error: 'test' }).url({ message: 'Invalid URL' })
+  end_date: z.date().or(z.string()),
+  description: z.string().nonempty({ message: 'Description is required' }),
+  logo: z.string().url()
 })
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 type Form = PartialBy<z.infer<typeof formSchema>, 'start_date' | 'end_date'>
 
-type Response = Promise<z.infer<typeof formSchema> | { Error: string }>
-
-export function EditEducation() {
+export function AddExperience() {
   const navigate = useNavigate()
-  const educationId = useParams()
-  const { data: education, isLoading } = useQuery({
-    queryKey: ['education', educationId],
-    queryFn: async () => {
-      return fetch(`${backendUrl}/resume/education/${educationId as string}`).then((res) => res.json() as Response)
-    },
-    enabled: !!educationId
+  const form = useForm<Form>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: '',
+      company: '',
+      description: '',
+      logo: ''
+    }
   })
   const { toast } = useToast()
-  const addEducation = useMutation({
+  const addExperience = useMutation({
     mutationFn: (data: Required<Form>) => {
       const startDate = new Date(data.start_date)
       const startMonth = startDate.toLocaleString('default', { month: 'long' })
       const startYear = startDate.getFullYear()
+      if (data.end_date === 'Present') {
+        return fetch(`${config.VITE_BACKEND_URL}/resume/experience`, {
+          body: JSON.stringify({
+            ...data,
+            start_date: `${startMonth} ${startYear}`,
+            end_date: data.end_date
+          }),
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+      }
       const endDate = new Date(data.end_date)
       const endMonth = endDate.toLocaleString('default', { month: 'long' })
       const endYear = endDate.getFullYear()
-      return fetch(`${backendUrl}/resume/education`, {
+      return fetch(`${config.VITE_BACKEND_URL}/resume/experience`, {
         body: JSON.stringify({
           ...data,
           start_date: `${startMonth} ${startYear}`,
           end_date: `${endMonth} ${endYear}`
         }),
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
     },
     onSuccess(res) {
       if (res.ok) {
         void navigate({ to: '/' })
-        toast({ title: 'Successfully added education' })
+        toast({ title: 'Successfully added experience' })
         return
       }
 
-      toast({ title: 'Failed to add education' })
+      toast({ title: 'Failed to add experience' })
     },
     onError() {
-      toast({ title: 'Failed to add education' })
+      toast({ title: 'Failed to add experience' })
     }
   })
 
   function onSubmit(data: Form) {
     if (data.start_date && data.end_date) {
-      addEducation.mutate(data as Required<Form>)
+      addExperience.mutate(data as Required<Form>)
     }
   }
 
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
-  if (!education) {
-    return <div>Failed to fetch education</div>
-  }
-
-  if ('Error' in education) {
-    return <div>{education.Error}</div>
-  }
-
-  return <Form onSubmit={onSubmit} isSubmitting={addEducation.isLoading} data={education} />
-}
-
-function Form({
-  data,
-  onSubmit,
-  isSubmitting
-}: {
-  onSubmit: (data: Form) => void
-  isSubmitting: boolean
-  data: z.infer<typeof formSchema>
-}) {
-  const navigate = useNavigate()
-  const form = useForm<Form>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      ...data
-    },
-    values: {
-      ...data
-    }
-  })
   return (
     <div className="flex flex-col gap-4 sm:pt-9">
       <FormProvider {...form}>
@@ -117,14 +98,14 @@ function Form({
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-8 rounded-md border-2 border-input p-8">
-          <h1 className="text-4xl">Add Education</h1>
+          <h1 className="text-4xl">Add Experience</h1>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
             <FormField
               control={form.control}
-              name="course"
+              name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Course:</FormLabel>
+                  <FormLabel>Title:</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -134,10 +115,10 @@ function Form({
             />
             <FormField
               control={form.control}
-              name="school"
+              name="company"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>School:</FormLabel>
+                  <FormLabel>Company:</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -178,7 +159,23 @@ function Form({
               name="end_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>End Date:</FormLabel>
+                  <div className="flex justify-between">
+                    <FormLabel className="inline-block w-24">End Date:</FormLabel>
+                    <label htmlFor="end-date-checkbox" className="flex items-center gap-2">
+                      Present
+                      <Checkbox
+                        id="end-date-checkbox"
+                        checked={field.value === 'Present'}
+                        onCheckedChange={(e) => {
+                          if (e) {
+                            field.onChange('Present')
+                            return
+                          }
+                          field.onChange(new Date())
+                        }}
+                      />
+                    </label>
+                  </div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -189,12 +186,25 @@ function Form({
                             !field.value && 'text-muted-foreground'
                           )}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                          {field.value ? (
+                            typeof field.value !== 'string' ? (
+                              format(field.value, 'PPP')
+                            ) : (
+                              <span>Present</span>
+                            )
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                      <Calendar
+                        mode="single"
+                        selected={typeof field.value === 'string' ? new Date() : field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
@@ -203,10 +213,10 @@ function Form({
             />
             <FormField
               control={form.control}
-              name="grade"
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Grade:</FormLabel>
+                  <FormLabel>Description:</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -232,7 +242,7 @@ function Form({
             <Button onClick={() => void navigate({ to: '/' })} className="w-fit" variant="destructive" type="button">
               Back
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={addExperience.isLoading}>
               Create
             </Button>
           </div>
