@@ -12,8 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { useMutation } from '@tanstack/react-query'
 import { useToast } from '@/components/ui/use-toast'
-
-const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
+import { config } from '@/config'
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -36,11 +35,14 @@ export function AddSkill() {
   const { toast } = useToast()
   const addSkill = useMutation({
     mutationFn: (data: Required<Form>) => {
-      return fetch(`${backendUrl}/resume/skill`, {
+      return fetch(`${config.VITE_BACKEND_URL}/resume/skill`, {
         body: JSON.stringify({
-          ...data,
+          ...data
         }),
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
     },
     onSuccess(res) {

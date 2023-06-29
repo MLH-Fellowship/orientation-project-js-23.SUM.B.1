@@ -11,7 +11,6 @@ interface Education {
   logo: string
 }
 interface Skill {
-  id: number
   name: string
   proficiency: string
   logo: string
@@ -171,16 +170,19 @@ function SkillsList() {
   }
 
   if (data.length === 0) {
-    return <p>Skill placeholder</p>
+    return <p>Education placeholder</p>
   }
 
   return (
     <ul className="grid gap-6">
-      {data.map((data) => (
+      {data.map((data, index) => (
         <li
-          key={data.id}
+          key={index + 1}
           className="relative after:[&:not(:last-child)]:absolute after:[&:not(:last-child)]:-bottom-3 after:[&:not(:last-child)]:left-0 after:[&:not(:last-child)]:h-[2px] after:[&:not(:last-child)]:w-full after:[&:not(:last-child)]:translate-y-1/2 after:[&:not(:last-child)]:rounded-md after:[&:not(:last-child)]:bg-slate-500 after:[&:not(:last-child)]:content-['']">
-          <Link to="/skills/edit/$id" params={{ id: data.id.toString() }}>
+          <Link
+            className="block rounded-md p-4 hover:bg-slate-700/20"
+            to="/skills/edit/$id"
+            params={{ id: (index + 1).toString() }}>
             <div className="grid grid-cols-2 grid-rows-2 justify-between gap-2">
               <h3 className="truncate">{data.name}</h3>
               <span className="text-right">{data.proficiency}</span>

@@ -1,57 +1,81 @@
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { Checkbox } from '@/components/ui/checkbox'
+import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
+import { useToast } from '@/components/ui/use-toast'
+import { config } from '@/config'
+import { cn } from '@/lib/utils'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { SelectValue } from '@radix-ui/react-select'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate, useParams } from '@tanstack/router'
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { useNavigate, useParams } from '@tanstack/router'
-import z from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { useToast } from '@/components/ui/use-toast'
-
-const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
-
+import z from 'zod'
 const formSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().nonempty({ message: 'Name is required' }),
   proficiency: z.string().regex(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)%$/, { message: 'Invalid proficiency' }),
   logo: z.string({ required_error: 'test' }).url({ message: 'Invalid URL' })
 })
+
 type Form = z.infer<typeof formSchema>
 
-type Response = Promise<z.infer<typeof formSchema> | { Error: string }>
+type Response =
+  | {
+      name: string
+      proficiency: string
+      logo: string
+    }
+  | { message: string }
 
 export function EditSkill() {
   const navigate = useNavigate()
-  const skillId = useParams()
+  const queryClient = useQueryClient()
+  const { id } = useParams()
   const { data: skill, isLoading } = useQuery({
-    queryKey: ['skill', skillId],
+    queryKey: ['skill', id],
     queryFn: async () => {
-      return fetch(`${backendUrl}/resume/skill/${skillId as string}`).then((res) => res.json() as Response)
+      return fetch(`${config.VITE_BACKEND_URL}/resume/skill/${id as string}`, {
+        method: 'GET'
+      }).then((res) => res.json() as Promise<Response>)
     },
-    enabled: !!skillId
+    enabled: !!id
   })
   const { toast } = useToast()
   const addSkill = useMutation({
     mutationFn: (data: Required<Form>) => {
-      return fetch(`${backendUrl}/resume/skill`, {
+      return fetch(`${config.VITE_BACKEND_URL}/resume/skill/${id as string}`, {
         body: JSON.stringify({
           ...data
         }),
-        method: 'PUT'
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      return fetch(`${config.VITE_BACKEND_URL}/resume/skill/${id as string}`, {
+        body: JSON.stringify({
+          ...data
+        }),
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
     },
-    onSuccess(res) {
+    async onSuccess(res) {
       if (res.ok) {
         void navigate({ to: '/' })
         toast({ title: 'Successfully updated skill' })
-        return
+        return queryClient.invalidateQueries({ queryKey: ['skill', id] })
       }
 
-      toast({ title: 'Failed to updated skill' })
+      toast({ title: 'Failed to update skill' })
     },
     onError() {
       toast({ title: 'Failed to update skill' })
@@ -67,14 +91,22 @@ export function EditSkill() {
   }
 
   if (!skill) {
-    return <div>Failed to fetch skill</div>
+    return <div>Failed to fetch the skill</div>
   }
 
-  if ('Error' in skill) {
-    return <div>{skill.Error}</div>
+  if ('message' in skill) {
+    return <div>{skill.message}</div>
   }
 
-  return <Form onSubmit={onSubmit} isSubmitting={addSkill.isLoading} data={skill} />
+  return (
+    <Form
+      onSubmit={onSubmit}
+      isSubmitting={addSkill.isLoading}
+      data={{
+        ...skill
+      }}
+    />
+  )
 }
 
 function Form({
@@ -90,9 +122,6 @@ function Form({
   const form = useForm<Form>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      ...data
-    },
-    values: {
       ...data
     }
   })
@@ -110,7 +139,7 @@ function Form({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Name:</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -118,6 +147,8 @@ function Form({
                 </FormItem>
               )}
             />
+            
+           
             <FormField
               control={form.control}
               name="proficiency"
@@ -150,7 +181,7 @@ function Form({
               Back
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              Create
+              Update
             </Button>
           </div>
         </form>
