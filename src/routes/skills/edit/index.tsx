@@ -16,79 +16,65 @@ import { useToast } from '@/components/ui/use-toast'
 const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
 
 const formSchema = z.object({
-  course: z.string().min(1),
-  school: z.string().min(1),
-  start_date: z.date(),
-  end_date: z.date(),
-  grade: z.string().regex(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)%$/, { message: 'Invalid grade' }),
+  name: z.string().min(1),
+  proficiency: z.string().regex(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)%$/, { message: 'Invalid proficiency' }),
   logo: z.string({ required_error: 'test' }).url({ message: 'Invalid URL' })
 })
-type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
-type Form = PartialBy<z.infer<typeof formSchema>, 'start_date' | 'end_date'>
+type Form = z.infer<typeof formSchema>
 
 type Response = Promise<z.infer<typeof formSchema> | { Error: string }>
 
 export function EditSkill() {
   const navigate = useNavigate()
-  const educationId = useParams()
-  const { data: education, isLoading } = useQuery({
-    queryKey: ['education', educationId],
+  const skillId = useParams()
+  const { data: skill, isLoading } = useQuery({
+    queryKey: ['skill', skillId],
     queryFn: async () => {
-      return fetch(`${backendUrl}/resume/education/${educationId as string}`).then((res) => res.json() as Response)
+      return fetch(`${backendUrl}/resume/skill/${skillId as string}`).then((res) => res.json() as Response)
     },
-    enabled: !!educationId
+    enabled: !!skillId
   })
   const { toast } = useToast()
   const addSkill = useMutation({
     mutationFn: (data: Required<Form>) => {
-      const startDate = new Date(data.start_date)
-      const startMonth = startDate.toLocaleString('default', { month: 'long' })
-      const startYear = startDate.getFullYear()
-      const endDate = new Date(data.end_date)
-      const endMonth = endDate.toLocaleString('default', { month: 'long' })
-      const endYear = endDate.getFullYear()
-      return fetch(`${backendUrl}/resume/education`, {
+      return fetch(`${backendUrl}/resume/skill`, {
         body: JSON.stringify({
-          ...data,
-          start_date: `${startMonth} ${startYear}`,
-          end_date: `${endMonth} ${endYear}`
+          ...data
         }),
-        method: 'POST'
+        method: 'PUT'
       })
     },
     onSuccess(res) {
       if (res.ok) {
         void navigate({ to: '/' })
-        toast({ title: 'Successfully added education' })
+        toast({ title: 'Successfully updated skill' })
         return
       }
 
-      toast({ title: 'Failed to add education' })
+      toast({ title: 'Failed to updated skill' })
     },
     onError() {
-      toast({ title: 'Failed to add education' })
+      toast({ title: 'Failed to update skill' })
     }
   })
 
   function onSubmit(data: Form) {
-    if (data.start_date && data.end_date) {
-      addSkill.mutate(data as Required<Form>)
-    }
+    addSkill.mutate(data as Required<Form>)
   }
 
   if (isLoading) {
     return <div>Loading...</div>
   }
 
-  if (!education) {
-    return <div>Failed to fetch education</div>
+  if (!skill) {
+    return <div>Failed to fetch skill</div>
   }
 
-  if ('Error' in education) {
-    return <div>{education.Error}</div>
+  if ('Error' in skill) {
+    return <div>{skill.Error}</div>
   }
 
-  return <Form onSubmit={onSubmit} isSubmitting={addSkill.isLoading} data={education} />
+  return <Form onSubmit={onSubmit} isSubmitting={addSkill.isLoading} data={skill} />
 }
 
 function Form({
@@ -117,14 +103,14 @@ function Form({
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-8 rounded-md border-2 border-input p-8">
-          <h1 className="text-4xl">Add Education</h1>
+          <h1 className="text-4xl">Edit Skill</h1>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
             <FormField
               control={form.control}
-              name="course"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Course:</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -134,79 +120,10 @@ function Form({
             />
             <FormField
               control={form.control}
-              name="school"
+              name="proficiency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>School:</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="start_date"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel className="inline-block w-24">Start Date:</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="end_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End Date:</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="grade"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Grade:</FormLabel>
+                  <FormLabel>Proficiency:</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>

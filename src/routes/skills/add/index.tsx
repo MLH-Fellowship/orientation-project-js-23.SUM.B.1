@@ -17,7 +17,7 @@ const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
 
 const formSchema = z.object({
   name: z.string().min(1),
-  proficiency: z.string().regex(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)%$/, { message: 'Invalid grade' }),
+  proficiency: z.string().regex(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)%$/, { message: 'Invalid proficiency' }),
   logo: z.string({ required_error: 'test' }).url({ message: 'Invalid URL' })
 })
 

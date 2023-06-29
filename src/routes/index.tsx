@@ -10,6 +10,12 @@ interface Education {
   grade: string
   logo: string
 }
+interface Skill {
+  id: number
+  name: string
+  proficiency: string
+  logo: string
+}
 
 const backendUrl = import.meta.env['VITE_BACKEND_URL'] as string
 
@@ -35,7 +41,7 @@ export function Index() {
       </div>
       <div className="flex flex-col gap-4 rounded bg-slate-800 p-4">
         <h2 className="text-2xl">Skills</h2>
-        <p>Skill Placeholder</p>
+        <SkillsList />
         <Link 
         to="/skills/create"
         className="rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90">
@@ -81,6 +87,44 @@ function EducationsList() {
               </span>
               <span>{data.course}</span>
               <span className="text-right">{data.grade}</span>
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function SkillsList() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['skills'],
+    queryFn: async () => {
+      return fetch(`${backendUrl}/resume/skill`).then((res) => res.json() as Promise<Skill[]>)
+    }
+  })
+
+  if (isLoading) {
+    return <p>Loading...</p>
+  }
+
+  if (isError) {
+    return <p>Something went wrong</p>
+  }
+
+  if (data.length === 0) {
+    return <p>Skill placeholder</p>
+  }
+
+  return (
+    <ul className="grid gap-6">
+      {data.map((data) => (
+        <li
+          key={data.id}
+          className="relative after:[&:not(:last-child)]:absolute after:[&:not(:last-child)]:-bottom-3 after:[&:not(:last-child)]:left-0 after:[&:not(:last-child)]:h-[2px] after:[&:not(:last-child)]:w-full after:[&:not(:last-child)]:translate-y-1/2 after:[&:not(:last-child)]:rounded-md after:[&:not(:last-child)]:bg-slate-500 after:[&:not(:last-child)]:content-['']">
+          <Link to="/skills/edit/$id" params={{ id: data.id.toString() }}>
+            <div className="grid grid-cols-2 grid-rows-2 justify-between gap-2">
+              <h3 className="truncate">{data.name}</h3>
+              <span className="text-right">{data.proficiency}</span>
             </div>
           </Link>
         </li>
