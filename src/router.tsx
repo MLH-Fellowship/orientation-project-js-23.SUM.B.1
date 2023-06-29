@@ -3,6 +3,8 @@ import { AddEducation } from '@/routes/educations/add'
 import { Root } from '@/routes/root'
 import { Index } from '@/routes'
 import { EditEducation } from './routes/educations/edit'
+import { AddExperience } from './routes/experiences/add'
+import { EditExperience } from './routes/experiences/edit/id'
 
 const rootRoute = new RootRoute({
   component: Root
@@ -26,7 +28,25 @@ const editEducationRoute = new Route({
   component: EditEducation
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, addEducationRoute, editEducationRoute])
+const addExperienceRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/experiences/create',
+  component: AddExperience
+})
+
+const editExperienceRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/experiences/edit/$id',
+  component: EditExperience
+})
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  addEducationRoute,
+  editEducationRoute,
+  addExperienceRoute,
+  editExperienceRoute
+])
 
 export const router = new Router({ routeTree })
 

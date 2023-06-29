@@ -3,12 +3,20 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/router'
 
 interface Education {
-  id: number
   course: string
   school: string
   start_date: string
   end_date: string
   grade: string
+  logo: string
+}
+
+interface Experience {
+  title: string
+  company: string
+  start_date: string
+  end_date: string
+  description: string
   logo: string
 }
 
@@ -18,8 +26,10 @@ export function Index() {
       <h1 className="mt-9 text-4xl">Resume Builder</h1>
       <div className="flex flex-col gap-4 rounded-md bg-slate-800 p-4">
         <h2 className="text-2xl">Experience</h2>
-        <p>Experience Placeholder</p>
-        <Link className="rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90">
+        <ExperiencesList />
+        <Link
+          to="/experiences/create"
+          className="rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90">
           Add Experience
         </Link>
       </div>
@@ -41,6 +51,50 @@ export function Index() {
       </div>
       <button>Export</button>
     </div>
+  )
+}
+
+function ExperiencesList() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['experiences'],
+    queryFn: async () => {
+      return fetch(`${config.VITE_BACKEND_URL}/resume/experience`, { mode: 'cors', method: 'GET' }).then(
+        (res) => res.json() as Promise<Experience[]>
+      )
+    }
+  })
+
+  if (isLoading) {
+    return <p>Loading...</p>
+  }
+
+  if (isError) {
+    return <p>Something went wrong</p>
+  }
+
+  if (data.length === 0) {
+    return <p>Education placeholder</p>
+  }
+
+  return (
+    <ul className="grid gap-6">
+      {data.map((data, index) => (
+        <li
+          key={index + 1}
+          className="relative after:[&:not(:last-child)]:absolute after:[&:not(:last-child)]:-bottom-3 after:[&:not(:last-child)]:left-0 after:[&:not(:last-child)]:h-[2px] after:[&:not(:last-child)]:w-full after:[&:not(:last-child)]:translate-y-1/2 after:[&:not(:last-child)]:rounded-md after:[&:not(:last-child)]:bg-slate-500 after:[&:not(:last-child)]:content-['']">
+          <Link to="/experiences/edit/$id" params={{ id: (index + 1).toString() }}>
+            <div className="grid grid-cols-2 grid-rows-2 justify-between gap-2">
+              <h3 className="truncate">{data.title}</h3>
+              <span className="text-right">
+                {data.start_date} - {data.end_date}
+              </span>
+              <span>{data.description}</span>
+              <span className="text-right">{data.company}</span>
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -66,11 +120,11 @@ function EducationsList() {
 
   return (
     <ul className="grid gap-6">
-      {data.map((data) => (
+      {data.map((data, index) => (
         <li
-          key={data.id}
+          key={index + 1}
           className="relative after:[&:not(:last-child)]:absolute after:[&:not(:last-child)]:-bottom-3 after:[&:not(:last-child)]:left-0 after:[&:not(:last-child)]:h-[2px] after:[&:not(:last-child)]:w-full after:[&:not(:last-child)]:translate-y-1/2 after:[&:not(:last-child)]:rounded-md after:[&:not(:last-child)]:bg-slate-500 after:[&:not(:last-child)]:content-['']">
-          <Link to="/educations/edit/$id" params={{ id: data.id.toString() }}>
+          <Link to="/educations/edit/$id" params={{ id: (index + 1).toString() }}>
             <div className="grid grid-cols-2 grid-rows-2 justify-between gap-2">
               <h3 className="truncate">{data.school}</h3>
               <span className="text-right">

@@ -1,43 +1,58 @@
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
+import { Checkbox } from '@/components/ui/checkbox'
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, Form as FormProvider } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
 import { config } from '@/config'
 import { cn } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { SelectValue } from '@radix-ui/react-select'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/router'
 import { format } from 'date-fns'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import z from 'zod'
 
+const GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F'] as const
 const formSchema = z.object({
-  course: z.string().min(1),
-  school: z.string().min(1),
+  course: z.string().nonempty({ message: 'Course is required' }),
+  school: z.string().nonempty({ message: 'School is required' }),
   start_date: z.date(),
-  end_date: z.date(),
-  grade: z.string().regex(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)%$/, { message: 'Invalid grade' }),
+  end_date: z.date().or(z.string()),
+  grade: z.string(),
   logo: z.string({ required_error: 'test' }).url({ message: 'Invalid URL' })
 })
+
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 type Form = PartialBy<z.infer<typeof formSchema>, 'start_date' | 'end_date'>
 
-type Response = Promise<z.infer<typeof formSchema> | { Error: string }>
+type Response =
+  | {
+      course: string
+      school: string
+      start_date: string
+      end_date: string
+      grade: string
+      logo: string
+    }
+  | { message: string }
 
 export function EditEducation() {
   const navigate = useNavigate()
-  const educationId = useParams()
+  const queryClient = useQueryClient()
+  const { id } = useParams()
   const { data: education, isLoading } = useQuery({
-    queryKey: ['education', educationId],
+    queryKey: ['education', id],
     queryFn: async () => {
-      return fetch(`${config.VITE_BACKEND_URL}/resume/education/${educationId as string}`).then(
-        (res) => res.json() as Response
-      )
+      return fetch(`${config.VITE_BACKEND_URL}/resume/education/${id as string}`, {
+        method: 'GET'
+      }).then((res) => res.json() as Promise<Response>)
     },
-    enabled: !!educationId
+    enabled: !!id
   })
   const { toast } = useToast()
   const addEducation = useMutation({
@@ -45,6 +60,19 @@ export function EditEducation() {
       const startDate = new Date(data.start_date)
       const startMonth = startDate.toLocaleString('default', { month: 'long' })
       const startYear = startDate.getFullYear()
+      if (data.end_date === 'Present') {
+        return fetch(`${config.VITE_BACKEND_URL}/resume/education`, {
+          body: JSON.stringify({
+            ...data,
+            start_date: `${startMonth} ${startYear}`,
+            end_date: data.end_date
+          }),
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+      }
       const endDate = new Date(data.end_date)
       const endMonth = endDate.toLocaleString('default', { month: 'long' })
       const endYear = endDate.getFullYear()
@@ -54,14 +82,17 @@ export function EditEducation() {
           start_date: `${startMonth} ${startYear}`,
           end_date: `${endMonth} ${endYear}`
         }),
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
     },
-    onSuccess(res) {
+    async onSuccess(res) {
       if (res.ok) {
         void navigate({ to: '/' })
         toast({ title: 'Successfully added education' })
-        return
+        return queryClient.invalidateQueries({ queryKey: ['education', id] })
       }
 
       toast({ title: 'Failed to add education' })
@@ -85,11 +116,28 @@ export function EditEducation() {
     return <div>Failed to fetch education</div>
   }
 
-  if ('Error' in education) {
-    return <div>{education.Error}</div>
+  if ('message' in education) {
+    return <div>{education.message}</div>
   }
 
-  return <Form onSubmit={onSubmit} isSubmitting={addEducation.isLoading} data={education} />
+  const startMonth = education.start_date.split(' ')[0] as string
+  const startYear = education.start_date.split(' ')[1] as string
+
+  // Can be the value Present which would result in undefined
+  const endMonth = education.end_date.split(' ')[0]
+  const endYear = education.end_date.split(' ')[1]
+
+  return (
+    <Form
+      onSubmit={onSubmit}
+      isSubmitting={addEducation.isLoading}
+      data={{
+        ...education,
+        start_date: new Date(Date.parse(`${startMonth} 1, ${startYear}`)),
+        end_date: endMonth && endYear ? new Date(Date.parse(`${endMonth} 1, ${endYear}`)) : 'Present'
+      }}
+    />
+  )
 }
 
 function Form({
@@ -106,9 +154,6 @@ function Form({
     resolver: zodResolver(formSchema),
     defaultValues: {
       ...data
-    },
-    values: {
-      ...data
     }
   })
   return (
@@ -118,7 +163,7 @@ function Form({
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-8 rounded-md border-2 border-input p-8">
-          <h1 className="text-4xl">Add Education</h1>
+          <h1 className="text-4xl">Edit Education</h1>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
             <FormField
               control={form.control}
@@ -166,9 +211,11 @@ function Form({
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                    </PopoverContent>
+                    {typeof field.value !== 'string' && (
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                      </PopoverContent>
+                    )}
                   </Popover>
                   <FormMessage />
                 </FormItem>
@@ -177,9 +224,26 @@ function Form({
             <FormField
               control={form.control}
               name="end_date"
-              render={({ field }) => (
+              render={({ field, formState }) => (
                 <FormItem>
-                  <FormLabel>End Date:</FormLabel>
+                  <div className="flex justify-between">
+                    <FormLabel className="inline-block w-24">End Date:</FormLabel>
+                    <label htmlFor="end-date-checkbox" className="flex items-center gap-2">
+                      Present
+                      <Checkbox
+                        id="end-date-checkbox"
+                        checked={field.value === 'Present'}
+                        onCheckedChange={(e) => {
+                          if (e) {
+                            field.onChange('Present')
+                            return
+                          }
+                          // Can't pass undefined or else validation will be out of sync according to react hook form docs
+                          field.onChange(formState.defaultValues?.end_date ?? new Date())
+                        }}
+                      />
+                    </label>
+                  </div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -190,12 +254,25 @@ function Form({
                             !field.value && 'text-muted-foreground'
                           )}>
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                          {field.value ? (
+                            typeof field.value !== 'string' ? (
+                              format(field.value, 'PPP')
+                            ) : (
+                              <span>Present</span>
+                            )
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
-                      <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                      <Calendar
+                        mode="single"
+                        selected={typeof field.value === 'string' ? undefined : field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
@@ -208,9 +285,20 @@ function Form({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Grade:</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select grade" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {GRADES.map((grade) => (
+                        <SelectItem key={grade} value={grade}>
+                          {grade}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
