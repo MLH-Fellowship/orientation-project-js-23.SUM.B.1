@@ -1,7 +1,9 @@
 import { RootRoute, Route, Router } from '@tanstack/router'
 import { AddEducation } from '@/routes/educations/add'
+import { AddSkill } from '@/routes/skills/add'
 import { Root } from '@/routes/root'
 import { Index } from '@/routes'
+import { EditSkill } from './routes/skills/edit/id'
 import { EditEducation } from './routes/educations/edit/id'
 import { AddExperience } from './routes/experiences/add'
 import { EditExperience } from './routes/experiences/edit/id'
@@ -28,6 +30,17 @@ const editEducationRoute = new Route({
   component: EditEducation
 })
 
+const addskillRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/skills/create',
+  component: AddSkill
+})
+
+const editSkillRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: '/skills/edit/$id',
+  component: EditSkill
+})
 const addExperienceRoute = new Route({
   getParentRoute: () => rootRoute,
   path: '/experiences/create',
@@ -45,7 +58,9 @@ const routeTree = rootRoute.addChildren([
   addEducationRoute,
   editEducationRoute,
   addExperienceRoute,
-  editExperienceRoute
+  editExperienceRoute,
+  addskillRoute,
+  editSkillRoute
 ])
 
 export const router = new Router({ routeTree })
