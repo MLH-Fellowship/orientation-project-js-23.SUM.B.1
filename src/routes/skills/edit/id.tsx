@@ -57,16 +57,6 @@ export function EditSkill() {
           'Content-Type': 'application/json'
         }
       })
-      
-      return fetch(`${config.VITE_BACKEND_URL}/resume/skill/${id as string}`, {
-        body: JSON.stringify({
-          ...data
-        }),
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
     },
     async onSuccess(res) {
       if (res.ok) {
